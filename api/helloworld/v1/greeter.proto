@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package helloworld.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "kratos-proto/api/helloworld/v1;v1";
+option java_multiple_files = true;
+option java_package = "dev.kratos.api.helloworld.v1";
+option java_outer_classname = "HelloWorldProtoV1";
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply)  {
+        option (google.api.http) = {
+            get: "/helloworld/{name}"
+        };
+    }
+  rpc SayEmpty (google.protobuf.Empty) returns (HelloReply)  {
+    option (google.api.http) = {
+      get: "/hello/sayEmpty"
+    };
+  }
+  rpc IsDefault (HelloIsDefaultRequest) returns (HelloDefaultReply)  {
+    option (google.api.http) = {
+      get: "/hello/isDefault"
+    };
+  }
+  rpc FiledMask (HelloFieldMaskRequest) returns (HelloFieldMaskResponse)  {
+    option (google.api.http) = {
+      post: "/hello/fieldMask"
+    };
+  }
+  rpc AnyTypes (HelloAnyTypesRequest) returns (HelloAnyTypesResponse)  {
+    option (google.api.http) = {
+      post: "/hello/any"
+    };
+  }
+  rpc Times (HelloTsRequest) returns (HelloTsResponse)  {
+    option (google.api.http) = {
+      post: "/hello/ts"
+    };
+  }
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
+
+message HelloIsDefaultRequest {
+  string name = 1;
+  google.protobuf.Int32Value age = 2;
+}
+
+message HelloDefaultReply {
+  string name = 1;
+  int32 age = 2;
+}
+
+message HelloFieldMaskRequest {
+  int32 task_id = 1;
+  bool is_delete = 2;
+  bool is_finished = 3;
+  google.protobuf.FieldMask field_mask = 4;
+}
+
+message HelloFieldMaskResponse {
+  repeated string field_mask = 1;
+}
+
+message HelloAnyTypesRequest {
+  string topic = 1;
+  google.protobuf.Any desc = 2;
+}
+
+message DescType {
+  string value = 1;
+}
+
+message HelloAnyTypesResponse {
+  string topic = 1;
+  string desc = 2;
+}
+
+message HelloTsRequest {
+  google.protobuf.Timestamp time_begin = 1;
+}
+
+message HelloTsResponse {
+  int64 timestamp = 1;
+}
