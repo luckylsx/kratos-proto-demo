@@ -26,6 +26,7 @@ type GreeterClient interface {
 	FiledMask(ctx context.Context, in *HelloFieldMaskRequest, opts ...grpc.CallOption) (*HelloFieldMaskResponse, error)
 	AnyTypes(ctx context.Context, in *HelloAnyTypesRequest, opts ...grpc.CallOption) (*HelloAnyTypesResponse, error)
 	Times(ctx context.Context, in *HelloTsRequest, opts ...grpc.CallOption) (*HelloTsResponse, error)
+	AnyJson(ctx context.Context, in *HelloStructRequest, opts ...grpc.CallOption) (*HelloStructResponse, error)
 }
 
 type greeterClient struct {
@@ -90,6 +91,15 @@ func (c *greeterClient) Times(ctx context.Context, in *HelloTsRequest, opts ...g
 	return out, nil
 }
 
+func (c *greeterClient) AnyJson(ctx context.Context, in *HelloStructRequest, opts ...grpc.CallOption) (*HelloStructResponse, error) {
+	out := new(HelloStructResponse)
+	err := c.cc.Invoke(ctx, "/helloworld.v1.Greeter/AnyJson", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
@@ -101,6 +111,7 @@ type GreeterServer interface {
 	FiledMask(context.Context, *HelloFieldMaskRequest) (*HelloFieldMaskResponse, error)
 	AnyTypes(context.Context, *HelloAnyTypesRequest) (*HelloAnyTypesResponse, error)
 	Times(context.Context, *HelloTsRequest) (*HelloTsResponse, error)
+	AnyJson(context.Context, *HelloStructRequest) (*HelloStructResponse, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -125,6 +136,9 @@ func (UnimplementedGreeterServer) AnyTypes(context.Context, *HelloAnyTypesReques
 }
 func (UnimplementedGreeterServer) Times(context.Context, *HelloTsRequest) (*HelloTsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Times not implemented")
+}
+func (UnimplementedGreeterServer) AnyJson(context.Context, *HelloStructRequest) (*HelloStructResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AnyJson not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -247,6 +261,24 @@ func _Greeter_Times_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Greeter_AnyJson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HelloStructRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).AnyJson(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/helloworld.v1.Greeter/AnyJson",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).AnyJson(ctx, req.(*HelloStructRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -277,6 +309,10 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Times",
 			Handler:    _Greeter_Times_Handler,
+		},
+		{
+			MethodName: "AnyJson",
+			Handler:    _Greeter_AnyJson_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

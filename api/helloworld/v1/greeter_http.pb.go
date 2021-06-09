@@ -21,6 +21,8 @@ var _ = mux.NewRouter
 const _ = http1.SupportPackageIsVersion1
 
 type GreeterHandler interface {
+	AnyJson(context.Context, *HelloStructRequest) (*HelloStructResponse, error)
+
 	AnyTypes(context.Context, *HelloAnyTypesRequest) (*HelloAnyTypesResponse, error)
 
 	FiledMask(context.Context, *HelloFieldMaskRequest) (*HelloFieldMaskResponse, error)
@@ -190,10 +192,36 @@ func NewGreeterHandler(srv GreeterHandler, opts ...http1.HandleOption) http.Hand
 		}
 	}).Methods("POST")
 
+	r.HandleFunc("/hello/struct", func(w http.ResponseWriter, r *http.Request) {
+		var in HelloStructRequest
+		if err := h.Decode(r, &in); err != nil {
+			h.Error(w, r, err)
+			return
+		}
+
+		next := func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AnyJson(ctx, req.(*HelloStructRequest))
+		}
+		if h.Middleware != nil {
+			next = h.Middleware(next)
+		}
+		out, err := next(r.Context(), &in)
+		if err != nil {
+			h.Error(w, r, err)
+			return
+		}
+		reply := out.(*HelloStructResponse)
+		if err := h.Encode(w, r, reply); err != nil {
+			h.Error(w, r, err)
+		}
+	}).Methods("POST")
+
 	return r
 }
 
 type GreeterHTTPClient interface {
+	AnyJson(ctx context.Context, req *HelloStructRequest, opts ...http1.CallOption) (rsp *HelloStructResponse, err error)
+
 	AnyTypes(ctx context.Context, req *HelloAnyTypesRequest, opts ...http1.CallOption) (rsp *HelloAnyTypesResponse, err error)
 
 	FiledMask(ctx context.Context, req *HelloFieldMaskRequest, opts ...http1.CallOption) (rsp *HelloFieldMaskResponse, err error)
@@ -213,6 +241,15 @@ type GreeterHTTPClientImpl struct {
 
 func NewGreeterHTTPClient(client *http1.Client) GreeterHTTPClient {
 	return &GreeterHTTPClientImpl{client}
+}
+
+func (c *GreeterHTTPClientImpl) AnyJson(ctx context.Context, in *HelloStructRequest, opts ...http1.CallOption) (out *HelloStructResponse, err error) {
+	path := binding.EncodePath("POST", "/hello/struct", in)
+	out = &HelloStructResponse{}
+
+	err = c.cc.Invoke(ctx, path, nil, &out, http1.Method("POST"), http1.PathPattern("/hello/struct"))
+
+	return
 }
 
 func (c *GreeterHTTPClientImpl) AnyTypes(ctx context.Context, in *HelloAnyTypesRequest, opts ...http1.CallOption) (out *HelloAnyTypesResponse, err error) {

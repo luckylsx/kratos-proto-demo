@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -37,7 +39,7 @@ func (s *GreeterService) SayEmpty(ctx context.Context, _ *emptypb.Empty)  (*v1.H
 }
 
 func (s *GreeterService) IsDefault(ctx context.Context, in *v1.HelloIsDefaultRequest) (*v1.HelloDefaultReply, error)  {
-	var age int32
+	var age int32 = 18
 	if in.GetAge() != nil {
 		age = in.GetAge().GetValue()
 	}
@@ -69,4 +71,26 @@ func (s *GreeterService) Times(ctx context.Context, in *v1.HelloTsRequest) (*v1.
 	s.log.Infof("seconds = %+v", in.GetTimeBegin().GetSeconds())
 	s.log.Infof("nano = %s", in.GetTimeBegin().GetNanos())
 	return &v1.HelloTsResponse{Timestamp: in.GetTimeBegin().GetSeconds()},nil
+}
+
+func (s *GreeterService) AnyJson(ctx context.Context, in *v1.HelloStructRequest) (*v1.HelloStructResponse, error)  {
+	maps := in.GetJson().AsMap()
+	s.log.Infof("this is map[string]interface{}  = %+v", maps)
+	for key, value := range in.GetJson().GetFields() {
+		s.log.Infof("maps key = %+v", key)
+		switch value.Kind.(type) {
+		case *structpb.Value_NumberValue:
+			s.log.Infof("maps value is number = %+v", value.GetNumberValue())
+		case *structpb.Value_StringValue:
+			s.log.Infof("maps value is number = %+v", value.GetStringValue())
+		case *structpb.Value_BoolValue:
+			s.log.Infof("maps value is number = %+v", value.GetBoolValue())
+		default:
+			s.log.Infof("maps value is other type = %+v", value.AsInterface())
+		}
+	}
+	bts, _ := json.Marshal(maps)
+	return &v1.HelloStructResponse{
+		Detail: string(bts),
+	},nil
 }

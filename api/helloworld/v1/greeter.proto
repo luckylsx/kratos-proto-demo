@@ -8,6 +8,7 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 
 option go_package = "kratos-proto/api/helloworld/v1;v1";
 option java_multiple_files = true;
@@ -47,6 +48,12 @@ service Greeter {
       post: "/hello/ts"
     };
   }
+
+  rpc AnyJson (HelloStructRequest) returns (HelloStructResponse)  {
+    option (google.api.http) = {
+      post: "/hello/struct"
+    };
+  }
 }
 
 // The request message containing the user's name.
@@ -62,6 +69,7 @@ message HelloReply {
 message HelloIsDefaultRequest {
   string name = 1;
   google.protobuf.Int32Value age = 2;
+  google.protobuf.BytesValue
 }
 
 message HelloDefaultReply {
@@ -100,4 +108,12 @@ message HelloTsRequest {
 
 message HelloTsResponse {
   int64 timestamp = 1;
+}
+
+message HelloStructRequest {
+  google.protobuf.Struct json = 1;
+}
+
+message HelloStructResponse {
+  string detail = 2;
 }
